@@ -161,6 +161,51 @@ Para conferir o que está agendado a qualquer momento:
 
 ---
 
+## ✉️ Validação do Envio de E-mail em Produção
+
+Sequência usada para validar o SMTP real (execute a partir de `~/domains/api.augepanamby.net.br/laravel`):
+
+```bash
+PHP=/opt/alt/php84/usr/bin/php
+
+# 1. O ambiente está correto? (Mail=smtp, QUEUE=sync, APP_ENV=production)
+$PHP artisan about --only=environment,drivers
+
+# 2. Renderiza os dois formatos do e-mail, sem enviar nada
+$PHP artisan leads:mail-test --dry-run
+
+# 3. Envia de verdade para o LEAD_NOTIFY_EMAIL configurado
+$PHP artisan leads:mail-test
+
+# 4. Confere o fuso usado nas datas (padrão America/Sao_Paulo)
+$PHP artisan leads:mail-test --dry-run
+```
+
+Validação ponta a ponta do fluxo real (lead → evento → e-mail), usando um lead de teste que depois é removido:
+
+```bash
+# Dispara pelo endpoint público da API
+curl -sS -X POST https://api.augepanamby.net.br/api/leads \
+  -H 'Content-Type: application/json' -H 'Accept: application/json' \
+  -H 'Referer: https://augepanamby.net.br/' \
+  -d '{"nome":"Teste Deploy","email":"teste.deploy@augepanamby.net.br","telefone":"(11) 99999-0000","como_conheceu":"outro","consent":true}'
+# Esperado: HTTP 201 e UM e-mail na caixa do LEAD_NOTIFY_EMAIL
+
+# LGPD: eliminar o lead de teste depois da validação
+$PHP artisan leads:forget teste.deploy@augepanamby.net.br --force --delete
+```
+
+> 💡 Para conferir a entrega sem depender de interface web, a extensão `imap` está disponível no PHP 8.4: `imap_open('{imap.hostinger.com:993/imap/ssl}INBOX', 'contato@augepanamby.net.br', '<senha>')` — útil quando o destinatário é a própria conta remetente (loopback).
+
+### Entregabilidade (evitar cair em spam)
+
+- **SPF** de `augepanamby.net.br`: presente ✅ (`v=spf1 include:_spf.mail.hostinger.com ~all`).
+- **DMARC**: presente ✅ (`v=DMARC1; p=none`) — pode ser endurecido para `p=quarantine` após ativar o DKIM.
+- **DKIM**: não encontrado nos seletores públicos usuais ⚠️. Ative em **hPanel → E-mails → DKIM** (a Hostinger exibe o registro TXT a ser publicado). Isso é especialmente importante quando o destinatário é **Microsoft 365/Outlook**, que filtra com rigor.
+- Peça ao destinatário para marcar o primeiro e-mail como **"Não é lixo eletrônico"** e criar uma regra para a pasta de entrada.
+
+---
+
 ## 🔄 Como Fazer Atualizações Futuras
 
 Para publicar novas versões com um único comando:

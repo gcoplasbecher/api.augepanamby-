@@ -100,10 +100,35 @@ Health check nativo para monitoramento (UptimeRobot, etc.) retornando `200 OK`.
 
 ## ✉️ Notificação por E-mail
 
-Quando um lead válido é recebido, o evento `LeadReceived` é disparado em `dispatchAfterResponse()`. O ouvinte envia um e-mail estruturado via canal `mail` para `LEAD_NOTIFY_EMAIL` contendo:
-- Nome, E-mail, Telefone formatado
-- Origem declarada e mensagem do cliente
-- **Botão com link direto para iniciar conversa no WhatsApp** com mensagem contextualizada
+Quando um lead válido é recebido, o evento `LeadReceived` é disparado em `dispatchAfterResponse()` (sem atrasar a resposta ao visitante). O ouvinte `SendLeadNotification` — descoberto automaticamente pelo Laravel a partir de `app/Listeners` — envia **um único** e-mail via canal `mail` para `LEAD_NOTIFY_EMAIL`.
+
+O e-mail é enviado em `multipart/alternative`, com as duas versões abaixo, e traz:
+
+- Assunto `🎯 Novo Lead: {nome} — Auge Panamby` e `Reply-To` apontando para o e-mail do próprio lead
+- Nome, e-mail e telefone formatado (com link `tel:`)
+- Origem declarada e mensagem do cliente (quando informadas)
+- **Botão "Chamar no WhatsApp"** com mensagem contextualizada + botão "Responder E-mail"
+- Bloco de conformidade LGPD com data/hora do consentimento em **horário de Brasília** (`LEAD_TIMEZONE`)
+
+| Template | Arquivo |
+| --- | --- |
+| HTML brandeado | `resources/views/emails/lead-notification.blade.php` |
+| Texto puro (fallback) | `resources/views/emails/lead-notification-text.blade.php` |
+
+> ⚠️ Não registre `SendLeadNotification` com `Event::listen()`: o listener já é descoberto automaticamente em `app/Listeners` e o registro duplicado faria o e-mail ser enviado **duas vezes** por lead (há teste de regressão em `tests/Feature/Api/StoreLeadTest.php`).
+
+### Validando o SMTP configurado
+
+```bash
+# Renderiza os dois formatos sem enviar (não requer SMTP)
+php artisan leads:mail-test --dry-run
+
+# Envia um e-mail de teste para o destinatário configurado (LEAD_NOTIFY_EMAIL)
+php artisan leads:mail-test
+
+# Envia o teste para outro endereço
+php artisan leads:mail-test outro@exemplo.com
+```
 
 ---
 
