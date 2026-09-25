@@ -92,8 +92,11 @@ if [[ -f "$APP_DIR/public/robots.txt" ]]; then
 fi
 
 # 7. Ajustar permissões para o servidor web
+# Diretórios 775 e arquivos 664: aplicar 775 recursivamente também deixaria os
+# arquivos executáveis, o que marca .gitignore como modificado no git a cada deploy.
 echo ">> Ajustando permissões de storage e bootstrap/cache..."
-chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
+find "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" -type d -exec chmod 775 {} +
+find "$APP_DIR/storage" "$APP_DIR/bootstrap/cache" -type f -exec chmod 664 {} +
 
 echo "=========================================="
 echo "Deploy finalizado com sucesso!"
