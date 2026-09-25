@@ -28,14 +28,17 @@ class NewLeadNotification extends Notification
             ->timezone(config('leads.timezone', 'America/Sao_Paulo'))
             ->format('d/m/Y \à\s H:i:s');
 
+        $data = [
+            'lead' => $this->lead,
+            'phoneFormatted' => $phoneFormatted,
+            'whatsUrl' => $whatsUrl,
+            'consentAtFormatted' => $consentAtFormatted,
+        ];
+
         return (new MailMessage)
             ->subject('🎯 Novo Lead: '.$this->lead->nome.' — Auge Panamby')
             ->replyTo($this->lead->email, $this->lead->nome)
-            ->view('emails.lead-notification', [
-                'lead' => $this->lead,
-                'phoneFormatted' => $phoneFormatted,
-                'whatsUrl' => $whatsUrl,
-                'consentAtFormatted' => $consentAtFormatted,
-            ]);
+            ->view('emails.lead-notification', $data)
+            ->text('emails.lead-notification-text', $data);
     }
 }

@@ -18,8 +18,13 @@ test('renderiza template de e-mail html e texto sem erros', function () {
     $notification = new NewLeadNotification($lead);
     $mail = $notification->toMail((object) []);
 
-    $html = view($mail->view, $mail->viewData)->render();
-    $text = view('emails.lead-notification-text', $mail->viewData)->render();
+    // MailMessage::text() converte view em ['html' => ..., 'text' => ...]
+    expect($mail->view)->toBeArray()
+        ->and($mail->view['html'])->toBe('emails.lead-notification')
+        ->and($mail->view['text'])->toBe('emails.lead-notification-text');
+
+    $html = view($mail->view['html'], $mail->viewData)->render();
+    $text = view($mail->view['text'], $mail->viewData)->render();
 
     expect($html)->toContain('Renata Albuquerque')
         ->and($html)->toContain('(11) 98765-4321')
@@ -43,7 +48,7 @@ test('omite a origem e a mensagem quando não informadas', function () {
 
     $mail = (new NewLeadNotification($lead))->toMail((object) []);
 
-    $html = view($mail->view, $mail->viewData)->render();
+    $html = view($mail->view['html'], $mail->viewData)->render();
 
     expect($html)->toContain('Joana Prado')
         ->and($html)->not->toContain('Como Conheceu')
