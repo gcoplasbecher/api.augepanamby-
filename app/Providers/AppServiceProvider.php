@@ -2,11 +2,8 @@
 
 namespace App\Providers;
 
-use App\Events\LeadReceived;
-use App\Listeners\SendLeadNotification;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,8 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Registro explícito do ouvinte de notificação de leads
-        Event::listen(LeadReceived::class, SendLeadNotification::class);
+        // O ouvinte App\Listeners\SendLeadNotification é registrado automaticamente
+        // pela descoberta de eventos do Laravel (app/Listeners). Não registre o mesmo
+        // ouvinte com Event::listen(): isso faria o e-mail de novo lead ser enviado
+        // duas vezes para cada submissão.
 
         // Anti-abuse: Rate limiter rigoroso para submissão pública de leads
         // 3 envios por minuto + teto de 20 por hora por IP

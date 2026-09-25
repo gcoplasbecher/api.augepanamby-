@@ -71,3 +71,21 @@ test('envia a notificação por e-mail para o endereço configurado', function (
         }
     );
 });
+
+test('envia exatamente um e-mail por lead recebido (sem ouvinte duplicado)', function () {
+    Notification::fake();
+
+    $payload = [
+        'nome' => 'Marina Duarte',
+        'email' => 'marina@teste.com',
+        'telefone' => '(11) 97777-4321',
+        'como_conheceu' => 'indicacao',
+        'consent' => true,
+    ];
+
+    $this->postJson('/api/leads', $payload)->assertStatus(201);
+
+    // O ouvinte SendLeadNotification é descoberto automaticamente pelo Laravel
+    // (app/Listeners). Registrá-lo também via Event::listen duplicaria o envio.
+    Notification::assertSentOnDemandTimes(NewLeadNotification::class, 1);
+});
