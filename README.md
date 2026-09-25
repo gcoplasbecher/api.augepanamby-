@@ -107,76 +107,20 @@ Quando um lead válido é recebido, o evento `LeadReceived` é disparado em `dis
 
 ---
 
-## 🚀 Guia de Deploy na Hostinger
+## 🚀 Deploy em Produção (Hostinger)
 
-### Subdomínio Recomendado: `api.augepanamby.net.br`
+O guia passo a passo completo e validado no ambiente real da Hostinger CloudLinux está documentado em:
+👉 **[`deploy/hostinger/README.md`](deploy/hostinger/README.md)**
 
-1. **Criar Subdomínio no hPanel:**
-   - Acesse o painel da Hostinger → **Domínios** → **Subdomínios**.
-   - Crie: `api.augepanamby.net.br`.
-   - Aponte a pasta raiz (**Document Root**) para: `domains/augepanamby.net.br/api.augepanamby/public`.
-
-2. **Subir os Arquivos via SSH ou Git:**
-   ```bash
-   cd ~/domains/augepanamby.net.br
-   git clone https://github.com/gcoplasbecher/api.augepanamby-.git api.augepanamby
-   cd api.augepanamby
-   ```
-
-3. **Instalar Dependências sem Dev:**
-   ```bash
-   composer install --no-dev --optimize-autoloader
-   ```
-
-4. **Configurar o `.env` de Produção:**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
-   Edite `.env`:
-   ```dotenv
-   APP_ENV=production
-   APP_DEBUG=false
-   APP_URL=https://api.augepanamby.net.br
-   FRONTEND_URL=https://augepanamby.net.br
-
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=u123456789_leads
-   DB_USERNAME=u123456789_user
-   DB_PASSWORD=sua_senha_forte
-
-   MAIL_MAILER=smtp
-   MAIL_HOST=smtp.hostinger.com
-   MAIL_PORT=465
-   MAIL_ENCRYPTION=ssl
-   MAIL_USERNAME=contato@augepanamby.net.br
-   MAIL_PASSWORD=senha_do_email
-   MAIL_FROM_ADDRESS="contato@augepanamby.net.br"
-   MAIL_FROM_NAME="Auge Panamby"
-
-   LEAD_NOTIFY_EMAIL=contato@augepanamby.net.br
-   ```
-
-5. **Executar Migrations e Cache:**
-   ```bash
-   php artisan migrate --force
-   php artisan config:cache
-   php artisan route:cache
-   ```
-
-6. **Permissões de Pastas:**
-   ```bash
-   chmod -R 775 storage bootstrap/cache
-   ```
-
-7. **Configurar Cron Job (hPanel):**
-   - Agendador de tarefas: a cada 1 minuto (`* * * * *`)
-   - Comando:
-     ```bash
-     /usr/bin/php /home/u123456789/domains/augepanamby.net.br/api.augepanamby/artisan schedule:run >> /dev/null 2>&1
-     ```
+### Resumo Rápido da Arquitetura:
+- **Subdomínio:** `api.augepanamby.net.br` configurado com **PHP 8.3** e SSL ativo no hPanel.
+- **Isolamento de Segurança:** O repositório Laravel é clonado em `~/domains/api.augepanamby.net.br/laravel` (fora do alcance público da web).
+- **Webroot (`public_html`):** Recebe o front controller seguro `deploy/hostinger/index.php` e `.htaccess`, garantindo que arquivos como `.env` e `storage/logs` fiquem inacessíveis.
+- **Deploy em 1 Comando:** Execute `bash deploy/hostinger/deploy.sh` para atualizar o projeto com migrações e caches automáticos.
+- **Cron Job (LGPD):**
+  ```bash
+  /opt/alt/php83/usr/bin/php /home/u427907551/domains/api.augepanamby.net.br/laravel/artisan schedule:run >> /dev/null 2>&1
+  ```
 
 ---
 
