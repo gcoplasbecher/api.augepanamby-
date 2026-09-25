@@ -21,4 +21,10 @@ return [
      | Janela de deduplicação (em minutos) para evitar duplo-clique / spam acidental
      */
     'dedupe_minutes' => (int) env('LEAD_DEDUPE_MINUTES', 5),
+
+    /*
+     | Fuso horário usado para exibir datas nas notificações enviadas à equipe comercial.
+     | A aplicação grava datas em UTC; aqui apenas convertemos para o horário de Brasília.
+     */
+    'timezone' => env('LEAD_TIMEZONE', 'America/Sao_Paulo'),
 ];

@@ -110,7 +110,7 @@
               <!-- Nota LGPD -->
               <div style="border-top: 1px dashed #E5E5E5; padding-top: 14px; font-size: 11px; color: #8A7E86; line-height: 1.5;">
                 🛡️ <strong>Registro de Conformidade LGPD (Lei 13.709/2018):</strong><br>
-                Consentimento explícito aceito em {{ $lead->consent_at?->format('d/m/Y \à\s H:i:s') ?? now()->format('d/m/Y \à\s H:i:s') }} (versão {{ $lead->consent_version ?? '2026-09' }}).
+                Consentimento explícito aceito em {{ $consentAtFormatted }} (horário de Brasília, versão do termo {{ $lead->consent_version ?? '2026-09' }}).
               </div>
             </td>
           </tr>

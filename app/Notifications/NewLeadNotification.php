@@ -24,6 +24,9 @@ class NewLeadNotification extends Notification
         $cleanPhone = PhoneNumber::clean($this->lead->telefone_e164 ?? $this->lead->telefone);
         $whatsUrl = 'https://wa.me/'.$cleanPhone.'?text='.urlencode('Olá '.$this->lead->nome.', recebemos seu contato sobre o Auge Panamby!');
         $phoneFormatted = PhoneNumber::formatBr($this->lead->telefone);
+        $consentAtFormatted = ($this->lead->consent_at ?? now())
+            ->timezone(config('leads.timezone', 'America/Sao_Paulo'))
+            ->format('d/m/Y \à\s H:i:s');
 
         return (new MailMessage)
             ->subject('🎯 Novo Lead: '.$this->lead->nome.' — Auge Panamby')
@@ -32,6 +35,7 @@ class NewLeadNotification extends Notification
                 'lead' => $this->lead,
                 'phoneFormatted' => $phoneFormatted,
                 'whatsUrl' => $whatsUrl,
+                'consentAtFormatted' => $consentAtFormatted,
             ]);
     }
 }

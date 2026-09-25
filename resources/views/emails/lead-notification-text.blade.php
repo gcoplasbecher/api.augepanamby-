@@ -30,7 +30,7 @@ AÇÕES RÁPIDAS
 ------------------------------------------------------------
 REGISTRO DE CONFORMIDADE LGPD (Lei 13.709/2018)
 ------------------------------------------------------------
-Consentimento aceito em: {{ $lead->consent_at?->format('d/m/Y \à\s H:i:s') ?? now()->format('d/m/Y \à\s H:i:s') }}
+Consentimento aceito em: {{ $consentAtFormatted }} (horário de Brasília)
 Versão do Termo: {{ $lead->consent_version ?? '2026-09' }}
 IP Hash: {{ $lead->ip_hash ?? 'N/A' }}
 

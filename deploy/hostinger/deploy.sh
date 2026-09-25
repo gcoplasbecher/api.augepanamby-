@@ -6,11 +6,22 @@ set -euo pipefail
 # ==============================================================================
 
 # Binários fixados para Hostinger CloudLinux
-PHP_BIN="/opt/alt/php83/usr/bin/php"
+# ATENÇÃO: o composer.lock exige PHP >= 8.4.1, por isso o binário padrão é o php84.
+# (o /usr/bin/php e o /opt/alt/php83 não atendem a esse requisito)
+PHP_BIN="/opt/alt/php84/usr/bin/php"
 COMPOSER_BIN="/usr/local/bin/composer"
 
 if [[ ! -x "$PHP_BIN" ]]; then
-    # Fallback se não encontrar o caminho alt
+    # Fallback para outras versões alt disponíveis na CloudLinux
+    for CANDIDATE in /opt/alt/php85/usr/bin/php /opt/alt/php83/usr/bin/php; do
+        if [[ -x "$CANDIDATE" ]]; then
+            PHP_BIN="$CANDIDATE"
+            break
+        fi
+    done
+fi
+
+if [[ ! -x "$PHP_BIN" ]]; then
     PHP_BIN="$(which php)"
 fi
 

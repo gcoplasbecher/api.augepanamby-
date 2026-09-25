@@ -38,12 +38,12 @@ Antes de rodar comandos no terminal, realize estes 4 passos no painel:
    - Certifique-se de que `api.augepanamby.net.br` está criado.
 2. **Versão do PHP no Subdomínio:**
    - Acesse **Avançado** → **Configuração do PHP**.
-   - Selecione o subdomínio `api.augepanamby.net.br` e defina como **PHP 8.3**.
+   - Selecione o subdomínio `api.augepanamby.net.br` e defina como **PHP 8.4**.
 3. **Certificado SSL:**
    - Acesse **Segurança** → **SSL** e garanta que o SSL está ativo para `api.augepanamby.net.br`.
-4. **Banco de Dados MySQL:**
-   - Acesse **Bancos de Dados** → **Gerenciamento de Banco de Dados**.
-   - Crie um banco (ex.: `u427907551_leads`) e um usuário com permissões completas. Guarde a senha gerada.
+4. **Banco de Dados:**
+   - **Não é necessário criar banco.** O projeto usa **SQLite** (`database/database.sqlite`), criado pelo `artisan migrate`.
+   - Opcional: se preferir MySQL, acesse **Bancos de Dados** → **Gerenciamento de Banco de Dados**, crie o banco e ajuste `DB_CONNECTION=mysql` + `DB_*` no `.env` antes de rodar as migrações.
 
 ---
 
@@ -63,13 +63,13 @@ cd laravel
 
 ### 2. Instalar dependências sem ambiente de desenvolvimento
 ```bash
-/opt/alt/php83/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
+/opt/alt/php84/usr/bin/php /usr/local/bin/composer install --no-dev --optimize-autoloader
 ```
 
 ### 3. Configurar arquivo `.env` de Produção
 ```bash
 cp .env.example .env
-/opt/alt/php83/usr/bin/php artisan key:generate
+/opt/alt/php84/usr/bin/php artisan key:generate
 nano .env
 ```
 
@@ -81,12 +81,17 @@ APP_DEBUG=false
 APP_URL=https://api.augepanamby.net.br
 FRONTEND_URL=https://augepanamby.net.br
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=u427907551_leads
-DB_USERNAME=u427907551_leads
-DB_PASSWORD="SUA_SENHA_DO_BANCO"
+# Banco de dados: SQLite (padrão do projeto, arquivo já vem com database/database.sqlite)
+# Em hospedagem compartilhada o volume de leads é baixo e o SQLite evita um serviço extra.
+DB_CONNECTION=sqlite
+
+# Alternativa em MySQL (caso opte por migrar depois):
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=u427907551_leads
+# DB_USERNAME=u427907551_leads
+# DB_PASSWORD="SUA_SENHA_DO_BANCO"
 
 # OBRIGATÓRIO: sync para envio imediato de e-mails em hospedagem compartilhada
 QUEUE_CONNECTION=sync
@@ -94,20 +99,23 @@ QUEUE_CONNECTION=sync
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.hostinger.com
 MAIL_PORT=465
-MAIL_ENCRYPTION=ssl
+MAIL_SCHEME=smtps
 MAIL_USERNAME=contato@augepanamby.net.br
 MAIL_PASSWORD="SUA_SENHA_DE_EMAIL"
 MAIL_FROM_ADDRESS="contato@augepanamby.net.br"
 MAIL_FROM_NAME="Auge Panamby"
 
+# Destinatário(s) das notificações de novo lead
 LEAD_NOTIFY_EMAIL=contato@augepanamby.net.br
+# Fuso usado para exibir as datas no e-mail (a aplicação grava datas em UTC)
+LEAD_TIMEZONE=America/Sao_Paulo
 ```
 
 ### 4. Executar Migrações e Caches
 ```bash
-/opt/alt/php83/usr/bin/php artisan migrate --force
-/opt/alt/php83/usr/bin/php artisan config:cache
-/opt/alt/php83/usr/bin/php artisan route:cache
+/opt/alt/php84/usr/bin/php artisan migrate --force
+/opt/alt/php84/usr/bin/php artisan config:cache
+/opt/alt/php84/usr/bin/php artisan route:cache
 chmod -R 775 storage bootstrap/cache
 ```
 
@@ -132,14 +140,24 @@ A resposta esperada é status `200 OK`.
 
 ## ⏰ Configuração do Agendador de Tarefas (Cron Job - LGPD)
 
-Para executar a anonimização e expurgo periódico da LGPD (`leads:prune`), configure uma tarefa no painel da Hostinger:
+O binário `crontab` **não está disponível via SSH** nesta hospedagem (compartilhada), portanto a tarefa deve ser criada pelo painel:
 
-1. Acesse **Avançado** → **Cron Jobs** → **Custom**.
-2. **Intervalo:** A cada 1 minuto (`* * * * *`) ou a cada hora (`0 * * * *`).
+1. Acesse **Avançado** → **Cron Jobs** → aba **Custom**.
+2. **Intervalo:** a cada hora (`0 * * * *`). Um intervalo de 1 minuto (`* * * * *`) também funciona, mas é desnecessário: o `leads:prune` está agendado para rodar diariamente às 03:00.
 3. **Comando:**
    ```bash
-   /opt/alt/php83/usr/bin/php /home/u427907551/domains/api.augepanamby.net.br/laravel/artisan schedule:run >> /dev/null 2>&1
+   /opt/alt/php84/usr/bin/php /home/u427907551/domains/api.augepanamby.net.br/laravel/artisan schedule:run
    ```
+
+> ⚠️ Use sempre `/opt/alt/php84/usr/bin/php`. O `/usr/bin/php` disponível no shell é o PHP 8.3, e o `composer.lock` exige **PHP >= 8.4.1** — o comando falharia com `Composer detected issues in your platform`.
+>
+> Nas primeiras horas, mantenha o cron **sem** `>> /dev/null 2>&1` para que o hPanel registre a saída e você consiga confirmar que a tarefa executou. Depois de validar, pode silenciar a saída.
+
+Para conferir o que está agendado a qualquer momento:
+```bash
+/opt/alt/php84/usr/bin/php artisan schedule:list
+/opt/alt/php84/usr/bin/php artisan schedule:run
+```
 
 ---
 

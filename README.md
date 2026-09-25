@@ -113,13 +113,13 @@ O guia passo a passo completo e validado no ambiente real da Hostinger CloudLinu
 👉 **[`deploy/hostinger/README.md`](deploy/hostinger/README.md)**
 
 ### Resumo Rápido da Arquitetura:
-- **Subdomínio:** `api.augepanamby.net.br` configurado com **PHP 8.3** e SSL ativo no hPanel.
+- **Subdomínio:** `api.augepanamby.net.br` configurado com **PHP 8.4** e SSL ativo no hPanel.
 - **Isolamento de Segurança:** O repositório Laravel é clonado em `~/domains/api.augepanamby.net.br/laravel` (fora do alcance público da web).
 - **Webroot (`public_html`):** Recebe o front controller seguro `deploy/hostinger/index.php` e `.htaccess`, garantindo que arquivos como `.env` e `storage/logs` fiquem inacessíveis.
 - **Deploy em 1 Comando:** Execute `bash deploy/hostinger/deploy.sh` para atualizar o projeto com migrações e caches automáticos.
-- **Cron Job (LGPD):**
+- **Cron Job (LGPD):** o host não expõe o binário `crontab` via SSH, então a tarefa é criada em **hPanel → Avançado → Cron Jobs** no modo **Custom**:
   ```bash
-  /opt/alt/php83/usr/bin/php /home/u427907551/domains/api.augepanamby.net.br/laravel/artisan schedule:run >> /dev/null 2>&1
+  /opt/alt/php84/usr/bin/php /home/u427907551/domains/api.augepanamby.net.br/laravel/artisan schedule:run
   ```
 
 ---
