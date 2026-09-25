@@ -3,6 +3,10 @@
 .env
 .env.backup
 .env.production
+# Backups criados durante deploys (ex.: .env.bak.20260925011020)
+.env.bak.*
+# Arquivo gerado pelo PHP/hPanel na raiz do projeto
+error_log
 .phpactor.json
 .phpunit.result.cache
 /.codex
