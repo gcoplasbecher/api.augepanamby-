@@ -23,28 +23,15 @@ class NewLeadNotification extends Notification
     {
         $cleanPhone = PhoneNumber::clean($this->lead->telefone_e164 ?? $this->lead->telefone);
         $whatsUrl = 'https://wa.me/'.$cleanPhone.'?text='.urlencode('Olá '.$this->lead->nome.', recebemos seu contato sobre o Auge Panamby!');
+        $phoneFormatted = PhoneNumber::formatBr($this->lead->telefone);
 
-        $message = (new MailMessage)
-            ->subject('🎯 Novo Lead Recebido: '.$this->lead->nome.' — Auge Panamby')
-            ->greeting('Olá, equipe Auge Panamby!')
-            ->line('Um novo cliente em potencial acabou de preencher o formulário na landing page:')
-            ->line('**Nome:** '.$this->lead->nome)
-            ->line('**E-mail:** '.$this->lead->email)
-            ->line('**Telefone:** '.PhoneNumber::formatBr($this->lead->telefone));
-
-        if ($this->lead->como_conheceu) {
-            $message->line('**Como nos conheceu:** '.ucfirst($this->lead->como_conheceu));
-        }
-
-        if ($this->lead->mensagem) {
-            $message->line('**Mensagem:**')
-                ->line('> '.e($this->lead->mensagem));
-        }
-
-        $message->action('Chamar no WhatsApp', $whatsUrl)
-            ->line('Data do recebimento: '.$this->lead->created_at?->format('d/m/Y \à\s H:i'))
-            ->salutation('Equipe Auge Panamby');
-
-        return $message;
+        return (new MailMessage)
+            ->subject('🎯 Novo Lead: '.$this->lead->nome.' — Auge Panamby')
+            ->replyTo($this->lead->email, $this->lead->nome)
+            ->view('emails.lead-notification', [
+                'lead' => $this->lead,
+                'phoneFormatted' => $phoneFormatted,
+                'whatsUrl' => $whatsUrl,
+            ]);
     }
 }
